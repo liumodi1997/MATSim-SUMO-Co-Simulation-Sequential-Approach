@@ -39,7 +39,7 @@ def parse_xml(xml_file):
 
 class configs:
     def __init__(self, name):
-        xml_file = ".\scenario\\" + name + '\\Config.xml'
+        xml_file = "./scenario/" + name + '/Config.xml'
         root = parse_xml(xml_file)
 
         for child in root:
@@ -73,17 +73,17 @@ class configs:
                 self.calibration_speed = int(child.get('value'))
 
         self.name = name
-        self.jar_path = self.matsim_add + '\\' + 'matsim-example-project-0.0.1-SNAPSHOT.jar'
-        self.matsim_config_path = self.matsim_add + '\\' + 'scenarios\\' + name + '\\' + 'config.xml'
-        self.matsim_output_events_file_path = self.matsim_add + '\\' + 'scenarios\\' + name + '\\' + 'output\\output_events.xml.gz'
-        self.route_file_path = '.\\scenario\\' + name + '\\sumo\\' + self.sumo_route
-        self.add_file_path = '.\\scenario\\' + name + '\\sumo\\addition.xml'
-        self.link_edge_file_path = '.\\scenario\\' + name + '\\' + self.link_file
-        self.cali_file_path = '.\\scenario\\' + name + '\\' + self.cali
-        self.matsim_map_path = self.matsim_add + '\\scenarios\\'
-        self.vehroute_file_path = '.\\scenario\\' + name + '\\Analysis\\' + 'vehroute.xml'
-        self.netstate_file_path = '.\\scenario\\' + name + '\\Analysis\\' + 'netstate.xml'
-        self.edge_measurement_file_path = '.\\scenario\\' + name + '\\Analysis\\' + 'EdgeMeasurement.xml'
+        self.jar_path = self.matsim_add + '/' + 'matsim-example-project-0.0.1-SNAPSHOT.jar'
+        self.matsim_config_path = self.matsim_add + '/' + 'scenarios/' + name + '/' + 'config.xml'
+        self.matsim_output_events_file_path = self.matsim_add + '/' + 'scenarios/' + name + '/' + 'output/output_events.xml.gz'
+        self.route_file_path = './scenario/' + name + '/sumo/' + self.sumo_route
+        self.add_file_path = './scenario/' + name + '/sumo/addition.xml'
+        self.link_edge_file_path = './scenario/' + name + '/' + self.link_file
+        self.cali_file_path = './scenario/' + name + '/' + self.cali
+        self.matsim_map_path = self.matsim_add + '/scenarios/'
+        self.vehroute_file_path = './scenario/' + name + '/Analysis/' + 'vehroute.xml'
+        self.netstate_file_path = './scenario/' + name + '/Analysis/' + 'netstate.xml'
+        self.edge_measurement_file_path = './scenario/' + name + '/Analysis/' + 'EdgeMeasurement.xml'
 
 def get_veh_index(id):
     return veh_dict.get(id)
@@ -858,7 +858,7 @@ def sumo_files_gen(files, routes, link_measurements, start_time_intervals, cali_
     af.close()
 
 def run_sumo(files):
-    traci.start(["sumo-gui", "-c", ".\\scenario\\" + files.name +  "\\sumo\\" + "osm.sumocfg", "--vehroute-output", files.vehroute_file_path])
+    traci.start(["sumo", "-c", "./scenario/" + files.name +  "/sumo/" + "osm.sumocfg", "--vehroute-output", files.vehroute_file_path])
     #  "--netstate-dump", files.netstate_file_path
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()

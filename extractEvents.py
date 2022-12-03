@@ -30,9 +30,9 @@ SUMO_LINK = []
 SUMO_EDGE = []
 LINK_EDGE_DIC = {}
 
-link_edge_file = ".\\scenario\\" + name + "\\link_to_edge.txt"
-events_file = '.\\scenario\\' + name + '\\' + events
-events_output_file ='.\\scenario\\' + name + '\\100_sumo_' + events[0:-3]
+link_edge_file = "./scenario/" + name + "/link_to_edge.txt"
+events_file = './scenario/' + name + '/' + events
+events_output_file ='./scenario/' + name + '/100_sumo_' + events[0:-3]
 
 [SUMO_LINK, SUMO_EDGE, LINK_EDGE_DIC] = mf.load_link_edge(link_edge_file)
 veh, matsim_simu_time, sumo_events = mf.matsim_output_trans_line(events_file)

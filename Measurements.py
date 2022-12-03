@@ -2,6 +2,7 @@ import main as mf
 import csv
 import gzip
 import xml.etree.ElementTree as ET
+import os
 
 
 def transfer_link(file):
@@ -130,7 +131,8 @@ def measure_link(sumo_events, time_interval, matsim_link_sumo):
 
 def create_csv(link_file, edge_file, comp_file, link_measure, edge_measure, comp_measure, time_interval, start_time, end_time):
     # Link
-    f = open(link_file, 'w', encoding='UTF8', newline='')
+    print(link_file)
+    f = open(link_file, 'w+', encoding='UTF8', newline='')
     writer = csv.writer(f)
     # 'time_interval', 'link_id', 'length', 'enter_num', 'leave_num', 'avg_speed'
     header = ['time_interval']
@@ -172,7 +174,8 @@ def create_csv(link_file, edge_file, comp_file, link_measure, edge_measure, comp
     f.close()
 
     # Edge
-    f = open(edge_file, 'w', encoding='UTF8', newline='')
+    print(edge_file)
+    f = open(edge_file, 'w+', encoding='UTF8', newline='')
     writer = csv.writer(f)
     # 'time_interval', 'edge_id', 'length', 'enter_num', 'leave_num', 'avg_speed', 'timeTravel', 'timeLoss'
     header = ['time_interval']
@@ -216,7 +219,7 @@ def create_csv(link_file, edge_file, comp_file, link_measure, edge_measure, comp
     f.close()
 
     # Compare file
-    f = open(comp_file, 'w', encoding='UTF8', newline='')
+    f = open(comp_file, 'w+', encoding='UTF8', newline='')
     writer = csv.writer(f)
     # 'time_interval', 'link_id', 'edge_id', 'len_link', 'len_edge', 'comp_enter_num', 'comp_leave_num', 'comp_avg_speed', 'comp_timeTravel', 'comp_timeTravel_perMeter', 'comp_flow'
     header = ['time_interval']
@@ -396,16 +399,17 @@ def compare_measurement(link_measure, edge_measure, link_edge_dic, time_interval
         comp_measure[link] = comp_ele
     return comp_measure
 
-sumo_link, sumo_edge, link_edge_dic = mf.load_link_edge(".\\scenario\\Leopoldstrasse\\link_to_edge.txt")
-matsim_node, matsim_link, matsim_link_sumo = mf.load_link(mf.parse_xml_gz("K:\\LMD2\\Project\\MA\\MATSim\\scenarios\\Munich\\munich-v1.0-network.xml.gz"))
-sumo_edge = mf.load_edge_info(".\\scenario\\Leopoldstrasse\\sumo\\osm.net.xml")
-sumo_events, start_time, end_time = transfer_link(".\\scenario\\Leopoldstrasse\\1_sumo_1.output_events.xml")
-edgeMeasurement_file = '.\\scenario\\Leopoldstrasse\\sumo\\EdgeMeasurement.xml'
+dir = os.getcwd()
+sumo_link, sumo_edge, link_edge_dic = mf.load_link_edge("./scenario/Leopoldstrasse/link_to_edge.txt")
+matsim_node, matsim_link, matsim_link_sumo = mf.load_link(mf.parse_xml_gz("K:/LMD2/Project/MA/MATSim/scenarios/Munich/munich-v1.0-network.xml.gz"))
+sumo_edge = mf.load_edge_info(dir + "/scenario/Leopoldstrasse/sumo/osm.net.xml")
+sumo_events, start_time, end_time = transfer_link(dir + "/scenario/Leopoldstrasse/1_sumo_1.output_events.xml")
+edgeMeasurement_file = dir + '/scenario/Leopoldstrasse/sumo/EdgeMeasurement.xml'
 time_interval = 1800
 link_measure = measure_link(sumo_events, time_interval, matsim_link_sumo)
 edge_measure = load_edge_measurement(edgeMeasurement_file, sumo_edge, time_interval)
 comp_measure = compare_measurement(link_measure, edge_measure, link_edge_dic, time_interval)
-link_csv_output = ".\\scenario\\Leopoldstrasse\\Analysis\\link_measurements_" + str(time_interval) + ".csv"
-edge_csv_output = ".\\scenario\\Leopoldstrasse\\Analysis\\edge_measurements_" + str(time_interval) + ".csv"
-comp_csv_output = ".\\scenario\\Leopoldstrasse\\Analysis\\comp_measurements_" + str(time_interval) + ".csv"
+link_csv_output = dir + "/scenario/Leopoldstrasse/Analysis/link_measurements_" + str(time_interval) + ".csv"
+edge_csv_output = dir + "/scenario/Leopoldstrasse/Analysis/edge_measurements_" + str(time_interval) + ".csv"
+comp_csv_output = dir + "/scenario/Leopoldstrasse/Analysis/comp_measurements_" + str(time_interval) + ".csv"
 create_csv(link_csv_output, edge_csv_output, comp_csv_output, link_measure, edge_measure, comp_measure, time_interval, start_time, end_time)

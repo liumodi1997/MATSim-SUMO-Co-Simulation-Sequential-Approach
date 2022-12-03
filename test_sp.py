@@ -14,10 +14,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     files = mf.configs( args.name )
-    matsim_map_path = files.matsim_add + '\\scenarios\\Munich\\' + files.matsim_map
-    #matsim_map_path = file.matsim_add + '\\scenarios\\Munich\\studyNetworkDense.xml'
-    events_file = '.\\scenario\\' + files.name + '\\' + files.event_file
-    link_file = '.\\scenario\\' + files.name + '\\' + files.link_file
+    matsim_map_path = files.matsim_add + '/scenarios/Munich/' + files.matsim_map
+    #matsim_map_path = file.matsim_add + '/scenarios/Munich/studyNetworkDense.xml'
+    events_file = './scenario/' + files.name + '/' + files.event_file
+    link_file = './scenario/' + files.name + '/' + files.link_file
     print('Events file path = ', events_file)
     print('Link-edge transform file path = ', files.link_edge_file_path)
 
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     #root = mf.parse_xml_gz(events_file)
     veh, matsim_simu_time, sumo_events = mf.matsim_output_trans_line(events_file, matsim_link_sumo)
-    sumo_map_file = '.\\scenario\\' + files.name + '\\sumo\\' + files.sumo_map
+    sumo_map_file = './scenario/' + files.name + '/sumo/' + files.sumo_map
     _ = mf.load_edge_info( sumo_map_file )
 
     #for i in range(5):
