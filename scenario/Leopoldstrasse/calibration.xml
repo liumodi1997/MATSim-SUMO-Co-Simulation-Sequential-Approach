@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cali-info>
+
+	<route id="ns1" edges="265463850 157964860#0 151542345#0 151542345#3 -60363514 -31344436#1 -36914644 -135588109 -482117464 151263120 89840530#0 151334113#0 151334113#1 -48242678 -89840540#1 -39321854#2 -242358064#1 40317920#0 -242358060#2"/>
+
+	<route id="sn1" edges="242358060#0 -40317920#4 242358064#0 39321854#0 89840540#0 48242678 50220178#1 50220178#3 135588108#0 365762133 151263118#0 135588109 40147288#0 31344436#0 60363514 151542344#0 151542344#2 151542344#3 151624978#0 157964861#0"/>
+
+	<route id="ew1" edges="-86414068 -332176204 -31344484 -33487028 -155548874 -288092851 -157964859#1 -33487027 -80737020#5 -80737022#3 -300326719#3 -300326719#2"/>
+
+	<route id="we1" edges="300326719#0 300326719#3 80737022#0 80737020#0 33487027 157964859#0 288092851 155548874 33487028 31344484 5785422 86414068"/>
+
+	<route id = "mw1" edges="151542345#0 71360468#0 80819305 80819311 300559210 83028196#0"/>
+
+	<route id="wm1" edges="-83028196#2 -300559210 -80819311 -80819305 -71360468#2 151542345#3"/>
+
+	<route id="mw2" edges="-31344436#1 -1001392108#2 -152468885 80239244#0 80239244#1 80239245"/>
+
+	<route id="wm2" edges="-80239245 -80239244#1 -80239244#0 -323871723 1001392108#0 -36914644"/>
+
+	<route id="mw3" edges="-482117464 151263120 89840530#0 154782349 93192033#0 154470151#0 154470151#1 -89699186#0"/>
+
+	<route id="wm3" edges="89699186#0 -154470151#2 -154470151#0 -93192033#1 -93192045#1 151334113#0"/>
+
+	<route id="me1" edges="60363514 -611296191 -88894451#1 -88894451#0 -4662544 -4662545#3 -4662545#2 4427671"/>
+
+	<route id="em1" edges="4427721#0 158399808#1 158399766#0 88894451#0 88894451#1 88894451#2 151542344#0"/>
+
+	<route id="me2" edges="40147288#0 50166118#0 493693636#0 493693636#1 33699500 -235912727"/>
+
+	<route id="em2" edges="235912727 -33699500 254536152#0 254536152#1 -50166118#2 -1001392108#2"/>
+	
+	<route id="mes" edges="-135588109 456746078 112036203 33487034#9 483091453#0"/>
+
+	<route id="snm" edges="-154782362 -33487034#10 -33487034#8 4427507#0 4427507#3 40147288#0"/>
+
+	<edge id="-154782362" route="snm"/>
+	<edge id="-33487034#10" route="snm"/>
+	<edge id="-33487034#8" route="snm"/>
+	<edge id="4427507#0" route="snm"/>
+	<edge id="4427507#3" route="snm"/>
+
+	<edge id="456746078" route="mes"/>
+	<edge id="112036203" route="mes"/>
+	<edge id="33487034#9" route="mes"/>
+	<edge id="483091453#0" route="mes"/>
+
+	<edge id="235912727" route="em2"/>
+	<edge id="-33699500" route="em2"/>
+	<edge id="-50166118#2" route="em2"/>
+
+	<edge id="50166118#0" route="me2"/>
+	<edge id="33699500" route="me2"/>
+	<edge id="-235912727" route="me2"/>
+
+	<edge id="4427721#0" route="em1"/>
+	<edge id="158399808#1" route="em1"/>
+	<edge id="158399766#0" route="em1"/>
+	<edge id="88894451#0" route="em1"/>
+	<edge id="88894451#1" route="em1"/>
+	<edge id="88894451#2" route="em1"/>
+	<edge id="-611296191" route="me1"/>
+	<edge id="-88894451#1" route="me1"/>
+	<edge id="-88894451#0" route="me1"/>
+	<edge id="-4662544" route="me1"/>
+	<edge id="-4662545#3" route="me1"/>
+	<edge id="-4662545#2" route="me1"/>
+	<edge id="4427671" route="me1"/>
+
+	<edge id="89699186#0" route="wm3"/>
+	<edge id="-154470151#2" route="wm3"/>
+	<edge id="-154470151#0" route="wm3"/>
+	<edge id="-93192033#1" route="wm3"/>
+	<edge id="-93192045#1" route="wm3"/>
+
+	<edge id="154782349" route="mw3"/>
+	<edge id="93192033#0" route="mw3"/>
+	<edge id="154470151#0" route="mw3"/>
+	<edge id="154470151#1" route="mw3"/>
+	<edge id="-89699186#0" route="mw3"/>
+
+	<edge id="-80239245" route="wm2"/>
+	<edge id="-80239244#1" route="wm2"/>
+	<edge id="-80239244#0" route="wm2"/>
+	<edge id="-323871723" route="wm2"/>
+	<edge id="1001392108#0" route="wm2"/>
+
+	<edge id="-1001392108#2" route="mw2"/>
+	<edge id="-152468885" route="mw2"/>
+	<edge id="80239244#0" route="mw2"/>
+	<edge id="80239244#1" route="mw2"/>
+	<edge id="80239245" route="mw2"/>
+
+	<edge id="-83028196#2" route="wm1"/>
+	<edge id="-300559210" route="wm1"/>
+	<edge id="-80819311" route="wm1"/>
+	<edge id="-80819305" route="wm1"/>
+	<edge id="-71360468#2" route="wm1"/>
+
+	<edge id="71360468#0" route="mw1"/>
+	<edge id="80819305" route="mw1"/>
+	<edge id="80819311" route="mw1"/>
+	<edge id="300559210" route="mw1"/>
+	<edge id="83028196#0" route="mw1"/>
+
+	<edge id="300326719#0" route="we1"/>
+	<edge id="300326719#3" route="we1"/>
+	<edge id="80737022#0" route="we1"/>
+	<edge id="80737020#0" route="we1"/>
+	<edge id="33487027" route="we1"/>
+	<edge id="157964859#0" route="we1"/>
+	<edge id="155548874" route="we1"/>
+	<edge id="33487028" route="we1"/>
+	<edge id="31344484" route="we1"/>
+	<edge id="5785422" route="we1"/>
+	<edge id="86414068" route="we1"/>
+	
+	<edge id="-86414068" route="ew1"/>
+	<edge id="-332176204" route="ew1"/>
+	<edge id="-31344484" route="ew1"/>
+	<edge id="-33487028" route="ew1"/>
+	<edge id="-155548874" route="ew1"/>
+	<edge id="-157964859#1" route="ew1"/>
+	<edge id="-33487027" route="ew1"/>
+	<edge id="-80737020#5" route="ew1"/>
+	<edge id="-80737022#3" route="ew1"/>
+	<edge id="-300326719#3" route="ew1"/>
+	<edge id="-300326719#2" route="ew1"/>
+
+	<edge id="265463850" route="ns1"/>
+	<edge id="157964860#0" route="ns1"/>
+	<edge id="151542345#0" route="ns1"/>
+	<edge id="151542345#3" route="ns1"/>
+	<edge id="-60363514" route="ns1"/>
+	<edge id="-31344436#1" route="ns1"/>
+	<edge id="-36914644" route="ns1"/>
+	<edge id="-135588109" route="ns1"/>
+	<edge id="-482117464" route="ns1"/>
+	<edge id="151334113#0" route="ns1"/>
+	<edge id="-89840540#1" route="ns1"/>
+	<edge id="-39321854#2" route="ns1"/>
+	<edge id="-242358064#1" route="ns1"/>
+	<edge id="40317920#0" route="ns1"/>
+	<edge id="-242358060#2" route="ns1"/>
+
+	<edge id="242358060#0" route="sn1"/>
+	<edge id="-40317920#4" route="sn1"/>
+	<edge id="242358064#0" route="sn1"/>
+	<edge id="39321854#0" route="sn1"/>
+	<edge id="89840540#0" route="sn1"/>
+	<edge id="50220178#3" route="sn1"/>
+	<edge id="151263118#0" route="sn1"/>
+	<edge id="135588109" route="sn1"/>
+	<edge id="40147288#0" route="sn1"/>
+	<edge id="31344436#0" route="sn1"/>
+	<edge id="60363514" route="sn1"/>
+	<edge id="151542344#0" route="sn1"/>
+	<edge id="151542344#2" route="sn1"/>
+	<edge id="151542344#3" route="sn1"/>
+	<edge id="151624978#0" route="sn1"/>
+	<edge id="157964861#0" route="sn1"/>
+</cali-info>
+
