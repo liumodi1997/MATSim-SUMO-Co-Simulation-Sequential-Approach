@@ -30,10 +30,14 @@ SUMO_LINK = []
 SUMO_EDGE = []
 LINK_EDGE_DIC = {}
 
+files = mf.configs( 'Leopoldstrasse' )
+
 link_edge_file = "./scenario/" + name + "/link_to_edge.txt"
 events_file = './scenario/' + name + '/' + events
 events_output_file ='./scenario/' + name + '/100_sumo_' + events[0:-3]
+matsim_map_path = files.matsim_add + '/scenarios/Munich/' + files.matsim_map
 
 [SUMO_LINK, SUMO_EDGE, LINK_EDGE_DIC] = mf.load_link_edge(link_edge_file)
-veh, matsim_simu_time, sumo_events = mf.matsim_output_trans_line(events_file)
+matsim_node, matsim_link, matsim_link_sumo = mf.load_link(mf.parse_xml_gz(matsim_map_path))
+veh, matsim_simu_time, sumo_events = mf.matsim_output_trans_line(events_file, matsim_link_sumo)
 write_sumo_events(events_output_file, sumo_events)
