@@ -1,11 +1,13 @@
 <?xml version="1.0" ?>
 <config>
-	<event-file value="scalingSFExp0.75CFExp1TEST_2016.output_events.xml.gz"/>
+	<event-file value="test.40.events.xml.gz"/>
 	<link-file value="link_to_edge.txt"/>
 	<sumo-map value="osm.net.xml"/>
 	<sumo-route value="sequential.rou.xml"/>
 	<sumo-output value="vehroute.xml"/>
 	<matsim value="K://LMD2//Project//MA//MATSim"/>
-	<matsim_output value="output//output_events.xml.gz"/>
+	<matsim-output value="output//output_events.xml.gz"/>
+	<interval value="600"/>
+	<calibration value="calibration.xml"/>
 
 </config>
