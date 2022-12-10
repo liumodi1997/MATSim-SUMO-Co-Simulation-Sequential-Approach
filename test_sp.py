@@ -6,6 +6,15 @@ SUMO_LINK = {}
 SUMO_EDGE = {}
 LINK_EDGE_DIC = {}
 
+def count_veh(veh):
+    num = 0
+    for veh_info in veh:
+
+        for eve in veh_info:
+            if eve[0] == '-1':
+                num += 1
+    print("counted num in veh(num of -1) = ", num)
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--file_path', help='events_file path', type=str)
@@ -33,11 +42,14 @@ if __name__ == '__main__':
     veh, matsim_simu_time, sumo_events = mf.matsim_output_trans_line(events_file, matsim_link_sumo)
     sumo_map_file = './scenario/' + files.name + '/sumo/' + files.sumo_map
     _ = mf.load_edge_info( sumo_map_file )
+    count_veh(veh)
 
     #for i in range(5):
     #    print("Veh = ", i, veh[i])
 
     routes = mf.find_cross_border(veh)
+
+    print(f"Before random, Number of routes = {len(routes)}")
     #routes = mf.edge_direction_check( routes )
     #routes = mf.check_routes(routes)
     #print(routes)
@@ -47,7 +59,7 @@ if __name__ == '__main__':
                                                                   link_measurements, sumo_events, matsim_link_sumo)
 
     # Generate cars w.r.t normal distribution of depart time
-    routes = mf.random_cars_gen(routes, 50, 20)
+    #routes = mf.random_cars_gen(routes, 50, 20)
     print(f"After random, Number of routes = {len(routes)}")
 
     mf.sumo_files_gen(files, routes, link_measurements, start_time_intervals, cali_edge, cali_route)

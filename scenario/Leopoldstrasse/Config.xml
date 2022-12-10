@@ -1,6 +1,6 @@
 <?xml version="1.0" ?>
 <config>
-	<event-file value="1_sumo_1.output_events.xml"/>
+	<event-file value="100_sumo_scalingSFExp0.75CFExp1TEST_2016.output_events.xml"/>
 	<link-file value="link_to_edge.txt"/>
 	<sumo-map value="osm.net.xml"/>
 	<sumo-route value="sequential.rou.xml"/>
@@ -11,7 +11,7 @@
 	<calibration value="calibration.xml"/>
 	<matsim-map value="munich-v1.0-network.xml.gz"/>
 	<route-probe value="1"/>
-	<calibration-flag value="1"/>
+	<calibration-flag value="0"/>
 	<calibration-flow-factor value="20"/>
 	<calibration-speed value="1"/>
 

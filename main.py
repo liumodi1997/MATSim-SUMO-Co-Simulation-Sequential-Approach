@@ -266,6 +266,8 @@ def matsim_output_trans_line(file, matsim_link_sumo):
     veh = []
     num_event = 0
     num_veh = 0
+    num_trip = 0
+    count = 0
     n = 0
 
     ending = file[-3:]
@@ -327,12 +329,14 @@ def matsim_output_trans_line(file, matsim_link_sumo):
                 veh_info = veh[get_veh_index(veh_id)]
                 if len(veh_info) == 0:
                     # if len==0 means a new route is started
+                    num_trip += 1
                     veh[get_veh_index(veh_id)].append(event_list)
                 else:
                     last_act = veh_info[-1]
 
                     # If last event is '-1', then add the link to the list, as a new route begins
                     if last_act[0] == '-1':
+                        num_trip += 1
                         veh[get_veh_index(veh_id)].append(event_list)
                     else:
                         # If last link is connected with this link, then we just add the link to bottom
@@ -341,9 +345,12 @@ def matsim_output_trans_line(file, matsim_link_sumo):
                         if matsim_link_sumo[last_link].to_node == matsim_link_sumo[link_id].from_node:
                             veh[get_veh_index(veh_id)].append(event_list)
                         else:
+                            #print(f"last trip not -1 but link not connected: last_link={last_link}, link={link_id}")
+                            count += 1
                             last_act = veh_info[-1]
                             ele = ['-1', -1, last_act[-1]]
                             veh[get_veh_index(veh_id)].append(ele)
+                            num_trip += 1
                             veh[get_veh_index(veh_id)].append(event_list)
 
 
@@ -368,9 +375,17 @@ def matsim_output_trans_line(file, matsim_link_sumo):
                         if last_act[0] != '-1':
                             last_act[-1] = child.time
 
+    # Add -1 flag in each veh at the end
+    for veh_info in veh:
+        last_act = veh_info[-1]
+        if last_act[0] != '-1':
+            event_list = ['-1', -1, last_act[-1]]
+            veh_info.append(event_list)
 
     time_dur = end_time - start_time
-    print("num_veh = ", num_veh)
+    print("MATSim num_veh = ", num_veh)
+    print("MATSim num_trip = ", num_trip)
+    print("count = ", count)
     endt = time.time()
     print(f"MATSim output event file transfered, time='{endt-start}'")
 
@@ -512,10 +527,9 @@ def matsim_measurements( matsim_simu_time, time_interval, link_measurements, sum
             if link_id in SUMO_LINK:
 
                 link_index = SUMO_LINK[ link_id ]
-                try:
-                    link_measurements[link_index].queue.append([veh_id, time1, pos, type, link_id])
-                except IndexError:
-                    print('1')
+
+                link_measurements[link_index].queue.append([veh_id, time1, pos, type, link_id])
+
                 link_measurements[link_index].enter_num[i_interval] += 1
 
                 # store the corresponding edge-id to the list, but only the 1st edge if one link to more edges
@@ -531,10 +545,8 @@ def matsim_measurements( matsim_simu_time, time_interval, link_measurements, sum
             link_id = one_event.link
             if link_id in SUMO_LINK:
                 link_index = SUMO_LINK[ link_id ]
-                try:
-                    link_measurements[ link_index ].leave_num[ i_interval ] += 1
-                except IndexError:
-                    print('2')
+
+                link_measurements[ link_index ].leave_num[ i_interval ] += 1
 
                 #find the veh in queue, and read the enter time
                 for veh_in_queue in link_measurements[ link_index ].queue:
@@ -546,8 +558,11 @@ def matsim_measurements( matsim_simu_time, time_interval, link_measurements, sum
                         break
 
                 # If relative Position is 1, meaning the car just enters the link, then leaves the link directly, just ignore it
-                if enter_pos > 0.99:
-                    link_measurements[link_index].leave_num[i_interval] -= 1
+                try:
+                    if enter_pos > 0.99:
+                        link_measurements[link_index].leave_num[i_interval] -= 1
+                        continue
+                except  UnboundLocalError:
                     continue
 
                 if time1 - enter_time == 0:
@@ -589,12 +604,13 @@ def find_cross_border(veh):
         route = []
         routing = []
 
-        # event = [ link_i, enter_time_i ]
+        # event = [ link_i, enter_time_i, out_time_i ]
         for event in vehicle:
             link = event[0]
 
             #if border-crossing detected, then set the flag and start recording the route
             if link in SUMO_LINK:
+                # flag == 0 means, a new trip begins
                 if flag == 0:
                     flag = 1
                     num_veh_sumo = num_veh_sumo + 1
@@ -628,7 +644,7 @@ def find_cross_border(veh):
                     #add routing and arrival time if this car ever runs in SUMO area
                     if len(route):
                         route.append(routing)
-                        route.append(event[1])
+                        route.append(event[2])
                         routing = []
                 if len(route):
                     routes.append(route)
@@ -636,6 +652,7 @@ def find_cross_border(veh):
     routes.sort(key=takeFirst)
     endt = time.time()
     print(f"Corssing-bound cars founded, time='{endt-start}' number of routes={len(routes)}")
+    print("find corss bound, num_veh = ", num_veh_sumo)
     return routes
 
 #def log_cross_border_time_matsim():
@@ -763,6 +780,7 @@ def sumo_files_gen(files, routes, link_measurements, start_time_intervals, cali_
         id = id + 1
     rf.write('</routes>')
     rf.close()
+    print("SUMO num_veh = ", id)
 
     # Generating additional file for calibrator
     af = open(add_file,'w+')
@@ -773,7 +791,7 @@ def sumo_files_gen(files, routes, link_measurements, start_time_intervals, cali_
         n = 0
         for edge_info in cali_edge:
             freq = time_interval
-            print(f' <routeProbe id="{edge_info[0]}" edge="{edge_info[0]}" freq="{time_interval/10}" file="output.xml"/>', file=af)
+            print(f' <routeProbe id="{edge_info[0]}" edge="{edge_info[0]}" freq="{time_interval/10}" file="routeProbe_output.xml"/>', file=af)
 
     m_id = 0
     for route_info in cali_route:
@@ -858,7 +876,7 @@ def sumo_files_gen(files, routes, link_measurements, start_time_intervals, cali_
     af.close()
 
 def run_sumo(files):
-    traci.start(["sumo", "-c", "./scenario/" + files.name +  "/sumo/" + "osm.sumocfg", "--vehroute-output", files.vehroute_file_path])
+    traci.start(["sumo-gui", "-c", "./scenario/" + files.name +  "/sumo/" + "osm.sumocfg", "--vehroute-output", files.vehroute_file_path])
     #  "--netstate-dump", files.netstate_file_path
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()

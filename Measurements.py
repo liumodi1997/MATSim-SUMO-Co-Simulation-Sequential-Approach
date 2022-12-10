@@ -226,8 +226,8 @@ def create_csv(link_file, edge_file, comp_file, link_measure, edge_measure, comp
     time1 = start_time
     i_interval = 0
     for link_id in comp_measure:
-        header.append(link_id)
-        header.append(edge_id)
+        header.append("link_id")
+        header.append("edge_id")
         header.append('len_link')
         header.append('len_edge')
         header.append('comp_enter_num')
@@ -374,14 +374,16 @@ class compare_ele:
         for i in range(len(link_info.enter_num)):
             self.comp_enter.append(int(link_info.enter_num[i]) - int(edge_info.enter_num[i]))
             self.comp_leave.append(int(link_info.leave_num[i]) - int(edge_info.leave_num[i]))
-            self.comp_speed.append(float(link_info.avg_speed[i]) - float(edge_info.avg_speed[i]))
-            if float(link_info.avg_speed[i]) != 0:
-                self.comp_travelTime.append(float(link_info.length) / float(link_info.avg_speed[i]) - float(edge_info.avg_speed[i]))
+
+            if float(link_info.avg_speed[i]) != 0 and float(edge_info.avg_speed[i]) != 0:
+                self.comp_travelTime.append(float(link_info.length) / float(link_info.avg_speed[i]) * int(link_info.leave_num[i]) - float(edge_info.length) / float(edge_info.avg_speed[i]))
+                self.comp_speed.append(float(link_info.avg_speed[i]) / int(link_info.leave_num[i]) - float(edge_info.avg_speed[i]))
             else:
                 self.comp_travelTime.append(0)
+                self.comp_speed.append(0)
 
             if float(edge_info.avg_speed[i]) != 0 and float(link_info.avg_speed[i]) != 0:
-                self.comp_travelTime_per_meter.append(1 / float(link_info.avg_speed[i]) - 1 / float(edge_info.avg_speed[i]))
+                self.comp_travelTime_per_meter.append(int(link_info.leave_num[i]) / float(link_info.avg_speed[i]) - 1 / float(edge_info.avg_speed[i]))
             else:
                 self.comp_travelTime_per_meter.append(0)
             self.comp_flow.append((int(link_info.leave_num[i]) - int(edge_info.leave_num[i])) / time_interval * 3600)
@@ -400,16 +402,17 @@ def compare_measurement(link_measure, edge_measure, link_edge_dic, time_interval
     return comp_measure
 
 dir = os.getcwd()
+scale = '100'
 sumo_link, sumo_edge, link_edge_dic = mf.load_link_edge("./scenario/Leopoldstrasse/link_to_edge.txt")
 matsim_node, matsim_link, matsim_link_sumo = mf.load_link(mf.parse_xml_gz("K:/LMD2/Project/MA/MATSim/scenarios/Munich/munich-v1.0-network.xml.gz"))
 sumo_edge = mf.load_edge_info(dir + "/scenario/Leopoldstrasse/sumo/osm.net.xml")
-sumo_events, start_time, end_time = transfer_link(dir + "/scenario/Leopoldstrasse/1_sumo_1.output_events.xml")
+sumo_events, start_time, end_time = transfer_link(dir + "/scenario/Leopoldstrasse/" + scale + "_sumo_scalingSFExp0.75CFExp1TEST_2016.output_events.xml")
 edgeMeasurement_file = dir + '/scenario/Leopoldstrasse/sumo/EdgeMeasurement.xml'
 time_interval = 1800
 link_measure = measure_link(sumo_events, time_interval, matsim_link_sumo)
 edge_measure = load_edge_measurement(edgeMeasurement_file, sumo_edge, time_interval)
 comp_measure = compare_measurement(link_measure, edge_measure, link_edge_dic, time_interval)
-link_csv_output = dir + "/scenario/Leopoldstrasse/Analysis/link_measurements_" + str(time_interval) + ".csv"
-edge_csv_output = dir + "/scenario/Leopoldstrasse/Analysis/edge_measurements_" + str(time_interval) + ".csv"
-comp_csv_output = dir + "/scenario/Leopoldstrasse/Analysis/comp_measurements_" + str(time_interval) + ".csv"
+link_csv_output = dir + "/scenario/Leopoldstrasse/Analysis/" + scale + "link_measurements_" + str(time_interval) + ".csv"
+edge_csv_output = dir + "/scenario/Leopoldstrasse/Analysis/" + scale + "edge_measurements_" + str(time_interval) + ".csv"
+comp_csv_output = dir + "/scenario/Leopoldstrasse/Analysis/" + scale + "comp_measurements_" + str(time_interval) + ".csv"
 create_csv(link_csv_output, edge_csv_output, comp_csv_output, link_measure, edge_measure, comp_measure, time_interval, start_time, end_time)
