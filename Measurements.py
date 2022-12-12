@@ -60,6 +60,9 @@ def transfer_link(file):
                     start_time = child.time
                 if child.time > end_time:
                     end_time = child.time
+    start_time = 0
+    start_time = 0
+    end_time = 86400
     return sumo_events, start_time, end_time
 
 class measure_ele:
@@ -74,18 +77,15 @@ class measure_ele:
 
 def measure_link(sumo_events, time_interval, matsim_link_sumo):
     count = 0
-    i_interval = 0
-    start_time_intervals = []
+    i_interval = 1
+    start_time_intervals = [0]
     # link_measure = { link_id: measure_ele }
     link_measure = {}
+    start_time = 0
     for one_event in sumo_events:
         count += 1
         time1 = one_event.time
         link_id = one_event.link
-
-        if i_interval == 0:
-            start_time_intervals.append(time1)
-            i_interval += 1
 
         if link_id not in link_measure:
             link_length = matsim_link_sumo[link_id].length
@@ -119,7 +119,9 @@ def measure_link(sumo_events, time_interval, matsim_link_sumo):
             link_id = one_event.link
             veh_id = one_event.veh_id
             enter_ele = []
+            enter_ind = -1
             for queue_ele in link_measure[link_id].queue:
+                enter_ind += 1
                 if queue_ele[0] == veh_id:
                     enter_ele = queue_ele
                     break
@@ -127,6 +129,10 @@ def measure_link(sumo_events, time_interval, matsim_link_sumo):
                 if time1 - enter_ele[1] != 0:
                     link_measure[link_id].avg_speed[i_interval - 1] += link_measure[link_id].length / (time1 - enter_ele[1])
                     link_measure[link_id].leave_num[i_interval - 1] += 1
+                else:
+                    link_measure[link_id].leave_num[i_interval - 1] += 1
+                q = link_measure[link_id].queue
+                del q[enter_ind]
     return link_measure
 
 def create_csv(link_file, edge_file, comp_file, link_measure, edge_measure, comp_measure, time_interval, start_time, end_time):
@@ -321,6 +327,7 @@ class edgemeasure_ele:
 def load_edge_measurement(xml_file, sumo_edge, time_interval):
     tree = ET.parse(xml_file)
     root = tree.getroot()
+    # edge_measure = { edge_id: cls edgemeasure_ele }
     edge_measure = {}
     i_interval = 0
     for interval_node in root:
@@ -336,8 +343,8 @@ def load_edge_measurement(xml_file, sumo_edge, time_interval):
                 edge_info = sumo_edge[edge_id]
                 edge_measure[edge_id] = edgemeasure_ele(edge_id, edge_info[2])
 
-            entered = edge_node.get('entered')
-            left = edge_node.get('left')
+            entered = int(edge_node.get('entered'))
+            left = int(edge_node.get('left'))
             sampleSeconds = edge_node.get('sampledSeconds')
 
             edge_measure_ele = edge_measure[edge_id]
@@ -396,23 +403,54 @@ def compare_measurement(link_measure, edge_measure, link_edge_dic, time_interval
         if edge == 'null':
             continue
         link_info = link_measure[link]
-        edge_info = edge_measure[edge]
+        try:
+            edge_info = edge_measure[edge]
+        except TypeError:
+            print(f"link={link} edge={edge}")
         comp_ele = compare_ele(link_info, edge_info, time_interval)
         comp_measure[link] = comp_ele
     return comp_measure
+
+def update_enter_leave(veh_file, edge_measure, time_interval):
+    tree = ET.parse(veh_file)
+    root = tree.getroot()
+
+    for child in root:
+        if child.tag == "vehicle":
+            veh_id = child.get("id")
+            i_depart = int(float(child.get("depart")) / time_interval)
+            i_arrival = int(float(child.get("arrival")) / time_interval)
+
+            for trip in child:
+                route_str = trip.get("edges")
+                route = route_str.split(" ")
+            edge_0 = route[0]
+            edge_1 = route[-1]
+
+            ele = edge_measure[edge_0]
+            ele.enter_num[i_depart] += 1
+
+            ele = edge_measure[edge_1]
+            ele.leave_num[i_arrival] += 1
+
+    return edge_measure
 
 dir = os.getcwd()
 scale = '100'
 sumo_link, sumo_edge, link_edge_dic = mf.load_link_edge("./scenario/Leopoldstrasse/link_to_edge.txt")
 matsim_node, matsim_link, matsim_link_sumo = mf.load_link(mf.parse_xml_gz("K:/LMD2/Project/MA/MATSim/scenarios/Munich/munich-v1.0-network.xml.gz"))
 sumo_edge = mf.load_edge_info(dir + "/scenario/Leopoldstrasse/sumo/osm.net.xml")
-sumo_events, start_time, end_time = transfer_link(dir + "/scenario/Leopoldstrasse/" + scale + "_sumo_scalingSFExp0.75CFExp1TEST_2016.output_events.xml")
+sumo_event_file = dir + "/scenario/Leopoldstrasse/" + scale + "_sumo_scalingSFExp0.75CFExp1TEST_2016.output_events.xml"
+sumo_events, start_time, end_time = transfer_link(sumo_event_file)
 edgeMeasurement_file = dir + '/scenario/Leopoldstrasse/sumo/EdgeMeasurement.xml'
+rou_file = dir + '/scenario/Leopoldstrasse/sumo/sequential.rou.xml'
+veh_file = dir + '/scenario/Leopoldstrasse/Analysis/vehroute.xml'
 time_interval = 1800
 link_measure = measure_link(sumo_events, time_interval, matsim_link_sumo)
 edge_measure = load_edge_measurement(edgeMeasurement_file, sumo_edge, time_interval)
+edge_measure = update_enter_leave(veh_file, edge_measure, time_interval)
 comp_measure = compare_measurement(link_measure, edge_measure, link_edge_dic, time_interval)
 link_csv_output = dir + "/scenario/Leopoldstrasse/Analysis/" + scale + "link_measurements_" + str(time_interval) + ".csv"
 edge_csv_output = dir + "/scenario/Leopoldstrasse/Analysis/" + scale + "edge_measurements_" + str(time_interval) + ".csv"
 comp_csv_output = dir + "/scenario/Leopoldstrasse/Analysis/" + scale + "comp_measurements_" + str(time_interval) + ".csv"
-create_csv(link_csv_output, edge_csv_output, comp_csv_output, link_measure, edge_measure, comp_measure, time_interval, start_time, end_time)
+create_csv(link_csv_output, edge_csv_output, comp_csv_output, link_measure, edge_measure, comp_measure, time_interval, 0, 86400)

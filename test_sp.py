@@ -15,6 +15,38 @@ def count_veh(veh):
                 num += 1
     print("counted num in veh(num of -1) = ", num)
 
+def count_border(routes, out_k, out_2, in_k, in_1):
+    out_end = 0 # car ends at border(does not leave)
+    out_false = 0
+    in_false = 0
+    out_con = 0 # car turns around at border(leaves the edge)
+    in_start = 0 # car starts at border(does not enter)
+    in_con = 0 # car turns around at border(enters the edge)
+    for route in routes:
+        routing = route[1]
+        for i in range(len(routing)):
+            edge = routing[i]
+            if edge == out_k:
+                if i+1 < len(routing):
+                    if routing[i + 1] == out_2:
+                        out_con += 1
+                    else:
+                        out_false += 1
+                else:
+                    out_end += 1
+
+            if edge == in_k:
+                if i > 0:
+                    if routing[i - 1] == in_1:
+                        in_con += 1
+                    else:
+                        in_false += 1
+                else:
+                    in_start += 1
+    print(f"Going out: out_end={out_end}, out_con={out_con}, out_false={out_false}")
+    print(f"Going in: in_start={in_start}, in_con={in_con}, in_false={in_false}")
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--file_path', help='events_file path', type=str)
@@ -48,6 +80,9 @@ if __name__ == '__main__':
     #    print("Veh = ", i, veh[i])
 
     routes = mf.find_cross_border(veh)
+
+    # Count numbers of routes which take turns at border
+    #count_border(routes, '89840554#0', '-89840554#1', '242358060#0', '-242358060#2')
 
     print(f"Before random, Number of routes = {len(routes)}")
     #routes = mf.edge_direction_check( routes )
