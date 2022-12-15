@@ -11,6 +11,11 @@
         <additional-files value="addition.xml"/>
     </input>
 
+    <output>
+        <vehroute-output value="vehroute.xml"/>
+        <vehroute-output.exit-times value="true"/>
+    </output>
+
     <processing>
         <ignore-route-errors value="true"/>
     </processing>

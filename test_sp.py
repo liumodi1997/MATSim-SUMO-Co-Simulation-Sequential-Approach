@@ -1,6 +1,9 @@
 import argparse
 import xml.etree.ElementTree as ET
 import main as mf
+import csv
+import Measurements as ms
+
 NUM_VEH = 2000
 SUMO_LINK = {}
 SUMO_EDGE = {}
@@ -73,7 +76,7 @@ if __name__ == '__main__':
     #root = mf.parse_xml_gz(events_file)
     veh, matsim_simu_time, sumo_events = mf.matsim_output_trans_line(events_file, matsim_link_sumo)
     sumo_map_file = './scenario/' + files.name + '/sumo/' + files.sumo_map
-    _ = mf.load_edge_info( sumo_map_file )
+    sumo_edge = mf.load_edge_info( sumo_map_file )
     count_veh(veh)
 
     #for i in range(5):
@@ -89,19 +92,21 @@ if __name__ == '__main__':
     #routes = mf.check_routes(routes)
     #print(routes)
 
-    link_measurements = mf.init_link_measurements(matsim_simu_time, files.interval)
-    link_measurements, start_time_intervals = mf.matsim_measurements(matsim_simu_time, files.interval,
-                                                                  link_measurements, sumo_events, matsim_link_sumo)
+    link_measure, start_time_intervals = mf.matsim_measurements(files.interval, sumo_events, matsim_link_sumo)
 
     # Generate cars w.r.t normal distribution of depart time
     #routes = mf.random_cars_gen(routes, 50, 20)
     print(f"After random, Number of routes = {len(routes)}")
 
-    mf.sumo_files_gen(files, routes, link_measurements, start_time_intervals, cali_edge, cali_route)
+    mf.sumo_files_gen(files, routes, link_measure, start_time_intervals, cali_edge, cali_route, LINK_EDGE_DIC)
     mf.run_sumo(files)
     sumo_veh = mf.sumo_output_trans(files.vehroute_file_path, len(routes))
     print("routes = ", len(routes), "sumo_veh = ", len(sumo_veh))
 
-    time_gap = mf.cal_time_gap(routes, sumo_veh)
+    edge_measure = ms.load_edge_measurement(files.edgeMeasurement_file_path, sumo_edge, files.interval)
+    edge_measure = ms.update_enter_leave(files.vehroute_file_path, edge_measure, files.interval)
+    comp_measure = ms.compare_measurement(link_measure, edge_measure, LINK_EDGE_DIC, files.interval)
+
+    time_gap = mf.cal_time_gap(routes, sumo_veh, files)
 
     mf.cal_score(time_gap)

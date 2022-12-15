@@ -7,7 +7,7 @@
 	<sumo-output value="vehroute.xml"/>
 	<matsim value="K://LMD2//Project//MA//MATSim"/>
 	<matsim-output value="output//output_events.xml.gz"/>
-	<interval value="1800"/>
+	<interval value="900"/>
 	<calibration value="calibration.xml"/>
 	<matsim-map value="munich-v1.0-network.xml.gz"/>
 	<route-probe value="1"/>
