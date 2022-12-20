@@ -139,7 +139,9 @@ def measure_link(sumo_events, time_interval, matsim_link_sumo):
 
 def create_csv(link_file, edge_file, comp_file, link_measure, edge_measure, comp_measure, time_interval, start_time, end_time):
     # Link
-    print(link_file)
+    print("Writing analysis file, link: ",link_file)
+    print("edge: ", edge_measure)
+    print("compare: ", comp_measure)
     f = open(link_file, 'w+', encoding='UTF8', newline='')
     writer = csv.writer(f)
     # 'time_interval', 'link_id', 'length', 'enter_num', 'leave_num', 'avg_speed'
@@ -182,7 +184,6 @@ def create_csv(link_file, edge_file, comp_file, link_measure, edge_measure, comp
     f.close()
 
     # Edge
-    print(edge_file)
     f = open(edge_file, 'w+', encoding='UTF8', newline='')
     writer = csv.writer(f)
     # 'time_interval', 'edge_id', 'length', 'enter_num', 'leave_num', 'avg_speed', 'timeTravel', 'timeLoss'
@@ -319,6 +320,7 @@ def measure_netstate(xml_file, sumo_edge, time_interval):
 def load_edge_measurement(xml_file, sumo_edge, time_interval):
     tree = ET.parse(xml_file)
     root = tree.getroot()
+    n = 86400 / time_interval
     # edge_measure = { edge_id: cls edgemeasure_ele }
     edge_measure = {}
     i_interval = 0
@@ -355,6 +357,17 @@ def load_edge_measurement(xml_file, sumo_edge, time_interval):
                 edge_measure_ele.timeLoss[i_interval] = timeLoss
 
         i_interval += 1
+
+    # zeros
+    while i_interval <= n:
+        for edge_id in edge_measure:
+            edge_measure_ele = edge_measure[edge_id]
+            edge_measure_ele.enter_num.append(0)
+            edge_measure_ele.leave_num.append(0)
+            edge_measure_ele.avg_speed.append(0)
+            edge_measure_ele.travelTime.append(0)
+            edge_measure_ele.timeLoss.append(0)
+        i_interval += 1
     return edge_measure
 
 
@@ -372,6 +385,8 @@ def compare_measurement(link_measure, edge_measure, link_edge_dic, time_interval
             print(f"link={link} edge={edge}")
         comp_ele = cd.compare_ele(link_info, edge_info, time_interval)
         comp_measure[link] = comp_ele
+        if link == '289841':
+            print('1')
     return comp_measure
 
 

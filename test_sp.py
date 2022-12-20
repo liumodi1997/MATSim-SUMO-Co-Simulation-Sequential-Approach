@@ -11,8 +11,8 @@ LINK_EDGE_DIC = {}
 
 def count_veh(veh):
     num = 0
-    for veh_info in veh:
-
+    for veh_id in veh:
+        veh_info = veh[veh_id]
         for eve in veh_info:
             if eve[0] == '-1':
                 num += 1
@@ -55,15 +55,18 @@ if __name__ == '__main__':
     parser.add_argument('--file_path', help='events_file path', type=str)
     parser.add_argument('--link_file_path', help='path to link-edge transform file', type=str)
     parser.add_argument('--name', help='Project Name', type=str)
+    parser.add_argument('--scale', help='Scale factor in %, only for Munich scenario', type=int)
+    parser.add_argument('--iter', help='Iteration number', type=int)
     args = parser.parse_args()
 
-    files = mf.configs( args.name )
+    files = mf.configs( args )
     matsim_map_path = files.matsim_add + '/scenarios/Munich/' + files.matsim_map
     #matsim_map_path = file.matsim_add + '/scenarios/Munich/studyNetworkDense.xml'
     events_file = './scenario/' + files.name + '/' + files.event_file
     link_file = './scenario/' + files.name + '/' + files.link_file
     print('Events file path = ', events_file)
     print('Link-edge transform file path = ', files.link_edge_file_path)
+    link_modify = {}
 
     [SUMO_LINK, SUMO_EDGE, LINK_EDGE_DIC] = mf.load_link_edge(files.link_edge_file_path)
     matsim_node, matsim_link, matsim_link_sumo = mf.load_link(mf.parse_xml_gz(matsim_map_path))
@@ -110,3 +113,9 @@ if __name__ == '__main__':
     time_gap = mf.cal_time_gap(routes, sumo_veh, files)
 
     mf.cal_score(time_gap)
+
+    # Optimization & Event change file
+    matsim_link_sumo = mf.matsim_network_opt(link_modify, matsim_link_sumo, link_measure, edge_measure, comp_measure,
+                                             files.interval)
+    event_change_tree = mf.create_event_change_file(files, link_modify)
+    mf.update_event_change_file(files, event_change_tree, link_modify)

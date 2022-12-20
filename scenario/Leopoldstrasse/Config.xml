@@ -1,18 +1,24 @@
 <?xml version="1.0" ?>
 <config>
-	<event-file value="100_sumo_scalingSFExp0.75CFExp1TEST_2016.output_events.xml"/>
-	<link-file value="link_to_edge.txt"/>
+	<matsim value="K:/LMD2/Project/MA/MATSim"/>
+	<matsim-output value="output/test.output_events.xml.gz"/>
+	<matsim-map value="scalingSFExp0.75CFExp1TEST_2016.output_network.xml"/>
+
 	<sumo-map value="osm.net.xml"/>
 	<sumo-route value="sequential.rou.xml"/>
 	<sumo-output value="vehroute.xml"/>
-	<matsim value="K://LMD2//Project//MA//MATSim"/>
-	<matsim-output value="output//output_events.xml.gz"/>
-	<interval value="900"/>
-	<calibration value="calibration.xml"/>
-	<matsim-map value="munich-v1.0-network.xml.gz"/>
+
 	<route-probe value="1"/>
 	<calibration-flag value="0"/>
 	<calibration-flow-factor value="20"/>
 	<calibration-speed value="1"/>
+	<interval value="900"/>
+
+	<link-file value="link_to_edge.txt"/>
+	<calibration value="calibration.xml"/>
+
+	<event-file value="scalingSFExp0.75CFExp1TEST_2016.output_events.xml"/>
+	<gauss-sigma value="50"/>
+	<max-iter value="3"/>
 
 </config>

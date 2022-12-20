@@ -6,6 +6,7 @@ import time
 import numpy as np
 import csv
 import ClassDefine as cd
+import os
 
 NUM_VEH = 1000
 # SUMO_LINK = { 'link0':0, 'link1':1, ..., 'linkj':j }
@@ -19,7 +20,7 @@ LINK_EDGE_DIC = {}
 
 # We use dict as the index of list veh:
 # veh_dict = { veh_id(str): index(int) }, index = 0 ... num_veh-1
-veh_dict = {}
+#veh_dict = {}
 
 def parse_xml_gz(xml_file):
     input = gzip.open(xml_file,'r')
@@ -33,8 +34,9 @@ def parse_xml(xml_file):
     return root
 
 class configs:
-    def __init__(self, name):
-        xml_file = "./scenario/" + name + '/Config.xml'
+    def __init__(self, args):
+        name = args.name
+        xml_file = "./scenario/" + args.name + '/Config.xml'
         root = parse_xml(xml_file)
 
         for child in root:
@@ -66,30 +68,42 @@ class configs:
                 self.calibration_flow_factor = int(child.get('value'))
             if child.tag == "calibration-speed":
                 self.calibration_speed = int(child.get('value'))
+            if child.tag == "gauss-sigma":
+                self.gauss_sigma = float(child.get('value'))
+            if child.tag == "max-iter":
+                self.max_iter = int(child.get('value'))
 
-        self.name = name
+        # MATSim related
+        self.matsim_scenario = 'fine_' + str(args.scale) + '_' + str(args.iter) + 'it'
         self.jar_path = self.matsim_add + '/' + 'matsim-example-project-0.0.1-SNAPSHOT.jar'
-        self.matsim_config_path = self.matsim_add + '/' + 'scenarios/' + name + '/' + 'config.xml'
-        self.matsim_output_events_file_path = self.matsim_add + '/' + 'scenarios/' + name + '/' + 'output/output_events.xml.gz'
+        self.matsim_config_path = self.matsim_add + '/' + 'scenarios/' + self.matsim_scenario + '/' + 'configBase.xml'
+        self.matsim_output_events_file_path = self.matsim_add + '/' + 'scenarios/' + self.matsim_scenario + '/' + 'output/output_events.xml.gz'
+        self.matsim_map_path = self.matsim_add + '/scenarios/' + self.matsim_scenario + '/scalingSFExp0.75CFExp1TEST_2016.output_network.xml'
+        self.event_file_path = self.matsim_add + '/' + 'scenarios/' + self.matsim_scenario + '/output/test.output_events.xml.gz'
+        self.event_change_file_path = self.matsim_add + '/scenarios/' + self.matsim_scenario + '/networkChangeEvents.xml'
+        # SUMO related
+        self.name = name
         self.route_file_path = './scenario/' + name + '/sumo/' + self.sumo_route
         self.add_file_path = './scenario/' + name + '/sumo/addition.xml'
         self.link_edge_file_path = './scenario/' + name + '/' + self.link_file
         self.cali_file_path = './scenario/' + name + '/' + self.cali
-        self.matsim_map_path = self.matsim_add + '/scenarios/'
         self.vehroute_file_path = './scenario/' + name + '/sumo/' + 'vehroute.xml'
         self.netstate_file_path = './scenario/' + name + '/Analysis/' + 'netstate.xml'
+        self.sumo_map_path = './scenario/' + name + '/sumo/' + self.sumo_map
+        # Analysis related
         self.edge_measurement_file_path = './scenario/' + name + '/Analysis/' + 'EdgeMeasurement.xml'
         self.gap_file_path = './scenario/' + name + '/Analysis/' + 'TripGap.csv'
         self.edgeMeasurement_file_path = './scenario/' + name + '/sumo/' + 'EdgeMeasurement.xml'
 
-def get_veh_index(id):
-    return veh_dict.get(id)
+        print('MATSim events file: ', self.matsim_output_events_file_path)
+
+
 
 def link_to_edge(link):
     return LINK_EDGE_DIC[ link ]
 
 def load_link_edge(file):
-    print('Loading link-edge file\n')
+    print('Loading link-edge file')
     start = time.time()
     f = open(file,'r')
 
@@ -125,7 +139,7 @@ def load_link_edge(file):
 
 
 def load_link(root):
-    print("Loading links...")
+    print("Loading links")
     start = time.time()
     matsim_node = []
     matsim_link = []
@@ -164,14 +178,21 @@ def run_matsim_jpype(jar_path, config_path):
 
 #direct run jar package with subprocess without starting JVM
 def run_matsim_subprocess(jar_path, config_path):
-    instr_run_subprocess = ['java','-Xmx512m','-cp',jar_path,'org.matsim.core.controler.Controler',config_path]
+    print('Running MATSim')
+    instr_run_subprocess = ['java','-Xmx5120m','-cp',jar_path,'org.matsim.core.controler.Controler',config_path]
     try:
         sp_run_matsim = sp.Popen(instr_run_subprocess,stderr=sp.PIPE)
     except sp.CalledProcessError as err:
         print('ERROR: ',err)
     else:
-        #print('Returncode: ', instr_run_subprocess.returncode)
+        print('Returncode: ', sp_run_matsim.returncode)
         print("0")
+
+def run_matsim_cmd(jar_path, config_path):
+    print('Running MATSim')
+    instr_run_subprocess = 'java -Xmx5120m -cp ' + jar_path + ' org.matsim.core.controler.Controler ' + config_path
+    d = os.system(instr_run_subprocess)
+    return d
 
 
 #Add a OR delete '-' char before the Edge(str).
@@ -189,6 +210,7 @@ def reverse_di( str ):
             return -1
 
 def load_cali(root):
+    print('Loading calibration file')
     #cali_edge = [ [edge_id, route] ]
     cali_edge = []
     #cali_routes = [ [route_id, "edge1 edges2 ..."] ]
@@ -209,10 +231,11 @@ def load_cali(root):
 
 
 def matsim_output_trans_line(file, matsim_link_sumo):
-    print('Transforming MATSim output (read by line)\n')
+    print('Transforming MATSim output (read by line)')
     start = time.time()
-    #veh[i] = [  [link_1,timei_1(depart_time),timeo_1], [link_2,timei_2,timeo_2], ..., [link_k,timei_k,timeo_k], ['-1',-1,arr_time] ]
-    veh = []
+    #veh = { veh_id: [[],[],[],...] }
+    #veh[veh_id] = [ [link_1,timei_1(depart_time),timeo_1], [link_2,timei_2,timeo_2], ..., [link_k,timei_k,timeo_k], ['-1',-1,arr_time] ]
+    veh = {}
     num_event = 0
     num_veh = 0
     num_trip = 0
@@ -249,23 +272,21 @@ def matsim_output_trans_line(file, matsim_link_sumo):
         if ending == ".gz":
             line = str(line, encoding="utf8")
         num_event += 1
-        try:
-            veh_id = child.id
-        except AttributeError:
-            print('1')
+        veh_id = child.id
         type = child.type
         if n == 0:
             start_time = child.time
         if line[:9] == "</events>":
             end_time = child.time
         n += 1
-        if n % 10000000 == 0:
-            print(n)
 
-        if get_veh_index( veh_id ) is None:
-            veh_dict[ veh_id ] = num_veh
-            veh.append([])
+        # Init for a new car in veh
+        try:
+            veh_info = veh[veh_id]
+        except KeyError:
+            veh[veh_id] = []
             num_veh += 1
+            veh_info = veh[veh_id]
 
         if type == "entered link":
             link_id = child.link
@@ -275,39 +296,39 @@ def matsim_output_trans_line(file, matsim_link_sumo):
                 event_list = [child.link, child.time, 0]
 
                 # Need to check whether this event starts a new route
-                veh_info = veh[get_veh_index(veh_id)]
+                #veh_info = veh[get_veh_index(veh_id)]
                 if len(veh_info) == 0:
                     # if len==0 means a new route is started
                     num_trip += 1
-                    veh[get_veh_index(veh_id)].append(event_list)
+                    veh_info.append(event_list)
                 else:
                     last_act = veh_info[-1]
 
                     # If last event is '-1', then add the link to the list, as a new route begins
                     if last_act[0] == '-1':
                         num_trip += 1
-                        veh[get_veh_index(veh_id)].append(event_list)
+                        veh_info.append(event_list)
                     else:
                         # If last link is connected with this link, and enter time has no big gap, then we just add the link to bottom
                         # If last link is not connected, then a new route begins
                         # If enter time gap between last link and this link is huge, then a new route
                         last_link = last_act[0]
                         if matsim_link_sumo[last_link].to_node == matsim_link_sumo[link_id].from_node and (event_list[1] - last_act[2]) < 10:
-                            veh[get_veh_index(veh_id)].append(event_list)
+                            veh_info.append(event_list)
                         else:
                             #print(f"last trip not -1 but link not connected, or time gap is big: last_link={last_link}, link={link_id}")
                             count += 1
                             last_act = veh_info[-1]
                             ele = ['-1', -1, last_act[-1]]
-                            veh[get_veh_index(veh_id)].append(ele)
+                            veh_info.append(ele)
                             num_trip += 1
-                            veh[get_veh_index(veh_id)].append(event_list)
+                            veh_info.append(event_list)
 
 
         # arrival time and flag "-1"
         if type == "vehicle leaves traffic":
             event_list = ["-1", -1, child.time]
-            veh[ get_veh_index(veh_id) ].append(event_list)
+            veh_info.append(event_list)
 
         if type == "vehicle leaves traffic" or type == "left link":
             link_id = child.link
@@ -315,8 +336,6 @@ def matsim_output_trans_line(file, matsim_link_sumo):
                 one_event = cd.event(veh_id, type, child.time, link_id, child.pos)
                 sumo_events.append( one_event )
                 if type == "left link":
-                    veh_info = veh[get_veh_index(veh_id)]
-
                     # Update the left time for last link, if last link "exists"!
                     # len==0 means, last event is "veh enters traffic". don't need to do anything
                     if len(veh_info) != 0:
@@ -326,7 +345,8 @@ def matsim_output_trans_line(file, matsim_link_sumo):
                             last_act[-1] = child.time
 
     # Add -1 flag in each veh at the end
-    for veh_info in veh:
+    for veh_id in veh:
+        veh_info = veh[veh_id]
         last_act = veh_info[-1]
         if last_act[0] != '-1':
             event_list = ['-1', -1, last_act[-1]]
@@ -342,84 +362,6 @@ def matsim_output_trans_line(file, matsim_link_sumo):
     return veh, time_dur, sumo_events
 
 
-def matsim_output_trans(root):
-    print('Transforming MATSim output (read by ElementTree)\n')
-
-    #veh[i] = [  [link_1,time_1(depart_time)], [link_2,time_2], ..., [link_k,time_k], [-1, arr_time] ]
-    veh = []
-    num_event = 0
-
-    num_veh = 0
-    #count the number of vehicles and events
-    for child in root:
-        num_event += 1
-        id1 = child.get("vehicle")
-        id2 = child.get("person")
-        if id1 is not None:
-            veh_id = id1
-        else:
-            veh_id = id2
-
-        '''if flag[veh_id]:
-            #veh.append(event)  Wrong way to define!!!
-            flag[veh_id] = 0
-            num_veh = num_veh + 1'''
-        if get_veh_index( veh_id ) is None:
-            veh_dict[ veh_id ] = num_veh
-            num_veh += 1
-    print("num_veh = ", num_veh)
-
-    veh = [[] for i in range(num_veh)]
-
-    # build the list, whose index is the Vehicle_ID, and whose context is routes and time
-    # record the start time and end time of all events
-    # build the list of class event, which includes the events in SUMO-area
-    sumo_events = []
-    n = 0
-    for child in root:
-        n += 1
-        if n == 1:
-            start_time = float(child.get('time'))
-        if n == num_event:
-            end_time = float(child.get('time'))
-
-        #depart time and starting lane
-        type = child.get("type")
-
-        #get the ID of vehcle OR person
-        id1 = child.get("vehicle")
-        id2 = child.get("person")
-        if id1 is not None:
-            veh_id = id1
-        else:
-            veh_id = id2
-
-        if type == "vehicle enters traffic" or type == "entered link":
-            event_list = [child.get("link"),float(child.get("time"))]
-            veh[ get_veh_index(veh_id) ].append(event_list)
-
-            link_id = child.get('link')
-            if link_id in SUMO_LINK:
-                one_event = cd.event( veh_id, type, float(child.get('time')), link_id)
-                sumo_events.append( one_event )
-
-
-        #arrival time and flag "-1"
-        if type == "vehicle leaves traffic":
-            event_list = ["-1",float(child.get("time"))]
-            veh[ get_veh_index(veh_id) ].append(event_list)
-
-        if type == "vehicle leaves traffic" or type == "left link":
-            link_id = child.get('link')
-            if link_id in SUMO_LINK:
-                one_event = cd.event( veh_id, type, float(child.get('time')), link_id)
-                sumo_events.append( one_event )
-    time_dur = end_time - start_time
-
-    return veh, time_dur, sumo_events
-
-
-
 def init_link_measurements( matsim_simu_time, time_interval ):
     n_interval = int(matsim_simu_time / time_interval) + 1
     link_measurements = []
@@ -429,7 +371,7 @@ def init_link_measurements( matsim_simu_time, time_interval ):
     return link_measurements
 
 def matsim_measurements( time_interval, sumo_events, matsim_link_sumo):
-    print('Measuring MATSim traffic flows\n')
+    print('Measuring MATSim traffic flows')
     start = time.time()
     start_time_intervals = [0]
     start_time = 0
@@ -522,7 +464,8 @@ def find_cross_border(veh):
     # enter_time = [ time1, time2, ... ], if more edges: linear interpolation
     routes = []
     num_veh_sumo = 0
-    for vehicle in veh:
+    for veh_id in veh:
+        vehicle = veh[veh_id]
         #flag is 0:this route not in SUMO
         flag = 0
         route = []
@@ -586,6 +529,7 @@ def find_cross_border(veh):
 
 # read net.xml file, record each edge's start and end point, and length
 def load_edge_info( xml_file ):
+    print('Loading Edges')
     root = parse_xml( xml_file )
     for child in root:
         if child.tag == 'edge' and child.get( 'function' ) != 'internal':
@@ -664,13 +608,15 @@ def random_cars_gen(routes, gauss_sigma, factor):
     print("Inserting random cars...")
     new_routes = []
     n = 0
+
+    # route = [ depart_time, [routing] , [leave_time], arrival_time ]
     for route in routes:
         mu = route[0]
         gauss_dis = np.random.normal(loc=mu, scale=gauss_sigma, size=(factor))
         n += 1
         new_routes.append(route)
         for i in range(factor):
-            new_route = [gauss_dis[i], route[1], route[2] + (gauss_dis[i] - mu)]
+            new_route = [gauss_dis[i], route[1], route[2], route[-1] + (gauss_dis[i] - mu)]
             new_routes.append(new_route)
             n += 1
         if n % 100000 == 0:
@@ -680,7 +626,7 @@ def random_cars_gen(routes, gauss_sigma, factor):
     return new_routes
 
 def sumo_files_gen(files, routes, link_measurements, start_time_intervals, cali_edge, cali_route, link_edge_dic):
-    print('Generating SUMO input files\n')
+    print('Generating SUMO input files')
     route_file = files.route_file_path
     add_file = files.add_file_path
     time_interval = files.interval
@@ -802,7 +748,8 @@ def sumo_files_gen(files, routes, link_measurements, start_time_intervals, cali_
     af.close()
 
 def run_sumo(files):
-    traci.start(["sumo-gui", "-c", "./scenario/" + files.name +  "/sumo/" + "osm.sumocfg"])
+    print('Running SUMO')
+    traci.start(["sumo", "-c", "./scenario/" + files.name +  "/sumo/" + "osm.sumocfg"])
     #  "--netstate-dump", files.netstate_file_path
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()
@@ -828,7 +775,7 @@ def sumo_output_trans(xml_file,num_veh_cross):
     return sumo_veh
 
 
-def cal_time_gap(routes,sumo_veh, files):
+def cal_time_gap(routes,sumo_veh, file):
     #time_gap = { id : [ depart_time_gap , arrival_time_gap , used_time_gap ] }
     #time gap = Matsim_time - SUMO_time
     #gap > 0  ==>  MATSim run slow, arrive late
@@ -838,10 +785,10 @@ def cal_time_gap(routes,sumo_veh, files):
     for i in range(len(routes)):
         route = routes[i]
         veh = sumo_veh[str(i)]
-        time_gap[i] = [ routes[i][0] - veh[1] , routes[i][-1] - veh[2] ,(routes[i][-1] - routes[i][0]) - (veh[2] - veh[1])]
+        time_gap[i] = [ route[0] - veh[1] , route[-1] - veh[2] ,(route[-1] - route[0]) - (veh[2] - veh[1])]
 
     # Write the time gap in CSV
-    f = open(files.gap_file_path, 'w+', encoding='UTF8', newline='')
+    f = open(file, 'w+', encoding='UTF8', newline='')
     writer = csv.writer(f)
     # 'Veh_ID', 'Depart Time Gap', 'Arrival Time Gap', 'Travel Time Gap'
     header = ['Veh_ID', 'Depart Time Gap', 'Arrival Time Gap', 'Travel Time Gap']
@@ -856,7 +803,7 @@ def cal_time_gap(routes,sumo_veh, files):
         line.append(element[2])
 
         # If bug happens, print the information
-        if element[2] > 2000:
+        if element[-1] > 2000:
             route = routes[i]
             rou = route[1]
             leave_time = route[2]
@@ -891,48 +838,77 @@ def cal_score(time_gap):
         id += 1
     average /= num
     print(f"Average time gap = {average}")
+    return average
 
-#def output_files():
+def matsim_network_opt(link_modify, matsim_link_sumo, link_measure, edge_measure, comp_measure, time_interval):
+    print('Optimizing MATSim network link flow capacity')
+    # link_modify records the modifications of link param
+    # link_modify = { link_ID: cls link_varient }
 
-def main_iter( files ):
-    score = 1
-    score_thres = 0
-    #jar_path = 'K:\LMD2\Project\MA\MATSim\matsim-example-project-0.0.1-SNAPSHOT.jar'
+    # Initialisation of link_modify
+    if link_modify == {}:
+        for link in matsim_link_sumo:
+            ele = cd.link_variant(link, time_interval, matsim_link_sumo[link])
+            link_modify[link] = ele
 
-    #config_path = 'K:\LMD2\Project\MA\MATSim\scenarios\straight1\config.xml'
+    n_interval = int(86400 / time_interval)
+    for link in link_measure:
+        try:
+            comp_measure_ele = comp_measure[link]
+        except KeyError:
+            continue
+        comp_measure_speed = comp_measure_ele.comp_speed
+        to_modify = link_modify[link]
+        for i in range(n_interval):
+            speed_rate = comp_measure_speed[i] / to_modify.freespeed[i]
+            if speed_rate < -1:
+                speed_rate = -1
+            to_modify.capacity[i] = to_modify.capacity[i] * (1 - speed_rate * 0.2)
+    return link_modify
+
+def create_event_change_file(files, link_modify):
+    root = ET.Element("networkChangeEvents")
+    root.attrib = {"xmlns":             "http://www.matsim.org/files/dtd",
+                   "xmlns:xsi":         "http://www.w3.org/2001/XMLSchema-instance",
+                   "xsi:schemaLocation":"http://www.matsim.org/files/dtd http://www.matsim.org/files/dtd/networkChangeEvents.xsd"}
+    for link in link_modify:
+        link_info = link_modify[link]
+        for i in range(link_info.n_interval):
+            node = ET.SubElement(root, "networkChangeEvent")
+            node.attrib = {"startTime": str(files.interval * (link_info.n_interval - 1))}
+            sub_node = ET.SubElement(node, "link")
+            sub_node.attrib = {"refId": link}
+            sub_node_2 = ET.SubElement(node, "capacity")
+            sub_node_2.attrib = {"type": "absolute", "value": str(link_info.capacity[i])}
+    tree = ET.ElementTree(root)
+    tree.write(files.event_change_file_path, encoding="utf-8", xml_declaration=True)
+    return tree
+
+def update_event_change_file(files, tree, link_modify):
+    print("Updating network event change file for MATSim")
+    nodes = tree.findall("networkChangeEvent")
+    for link in link_modify:
+        link_info =  link_modify[link]
+        node_link = []
+        # Find all nodes, with sub node having same link ID
+        for node in nodes:
+            for sub_node in node:
+                if sub_node.tag == 'link':
+                    if sub_node.get('refId') == link:
+                        node_link.append(node)
+
+        for i in range(link_info.n_interval):
+            time = files.interval * (i)
+            for node in node_link:
+                if node.attrib['startTime'] == time:
+                    for sub_node in node:
+                        if sub_node.tag == 'capacity':
+                            sub_node.set('value', str(link_info.capacity[i]))
+    tree.write(files.event_change_file_path, encoding="utf-8", xml_declaration=True)
 
 
-    time_interval = files.interval
-    #run_matsim_jpype(jar_path, config_path)
-    run_matsim_subprocess(files.jar_path, files.matsim_config_path)
-
-    #load  output files from output_events.xml
-
-    xml_root = parse_xml_gz(files.matsim_output_events_file)
-
-    #transfer tree data to route table, and measure the traffic flows for calibrator
-    veh, matsim_simu_time, sumo_events = matsim_output_trans(xml_root)
-    link_measurements = init_link_measurements(matsim_simu_time, time_interval)
-    link_measurements, start_time_intervals = matsim_measurements(xml_root, matsim_simu_time, time_interval, link_measurements, sumo_events)
-
-    veh_cross = find_cross_border(veh)
-    num_veh_cross = len(veh_cross)
-
-    #log_cross_border_time_matsim()
 
 
-    sumo_files_gen(files.route_file, files.add_file, veh_cross, link_measurements, start_time_intervals, time_interval)
-
-    run_sumo(files)
-
-    sumo_veh = sumo_output_trans(files['sumo_output'],num_veh_cross)
-
-    time_gap = cal_time_gap(veh_cross,sumo_veh)
-
-    cal_score(time_gap)
-
-    score = 0
-    #output_files()
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -943,4 +919,3 @@ if __name__ == '__main__':
     jp.startJVM(jvm_path)
     jp.shutdownJVM()"""
 
-    main_iter( files )

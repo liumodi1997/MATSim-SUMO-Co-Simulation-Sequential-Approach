@@ -105,3 +105,11 @@ class compare_ele:
             else:
                 self.comp_travelTime_per_meter.append(0)
             self.comp_flow.append((int(link_info.leave_num[i]) - int(edge_info.leave_num[i])) / time_interval * 3600)
+
+class link_variant:
+    def __init__(self, link_id, time_interval, link_info):
+        self.link = link_id
+        self.n_interval = int(86400 / time_interval)
+        self.capacity = [link_info.capacity] * self.n_interval
+        self.freespeed = [link_info.freespeed] * self.n_interval
+
