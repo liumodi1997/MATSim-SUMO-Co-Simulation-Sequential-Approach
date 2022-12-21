@@ -78,7 +78,7 @@ class configs:
         self.jar_path = self.matsim_add + '/' + 'matsim-example-project-0.0.1-SNAPSHOT.jar'
         self.matsim_config_path = self.matsim_add + '/' + 'scenarios/' + self.matsim_scenario + '/' + 'configBase.xml'
         self.matsim_output_events_file_path = self.matsim_add + '/' + 'scenarios/' + self.matsim_scenario + '/' + 'output/output_events.xml.gz'
-        self.matsim_map_path = self.matsim_add + '/scenarios/' + self.matsim_scenario + '/scalingSFExp0.75CFExp1TEST_2016.output_network.xml'
+        self.matsim_map_path = self.matsim_add + '/scenarios/' + self.matsim_scenario + '/' + self.matsim_map
         self.event_file_path = self.matsim_add + '/' + 'scenarios/' + self.matsim_scenario + '/output/test.output_events.xml.gz'
         self.event_change_file_path = self.matsim_add + '/scenarios/' + self.matsim_scenario + '/networkChangeEvents.xml'
         # SUMO related
