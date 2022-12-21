@@ -29,7 +29,11 @@ def parse_xml_gz(xml_file):
     return root
 
 def parse_xml(xml_file):
-    tree = ET.parse(xml_file)
+    if xml_file[-1] == 'z':
+        input = gzip.open(xml_file, 'r')
+    else:
+        input = xml_file
+    tree = ET.parse(input)
     root = tree.getroot()
     return root
 
