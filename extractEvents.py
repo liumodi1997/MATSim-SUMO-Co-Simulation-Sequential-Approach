@@ -3,6 +3,7 @@
 # Important: each line printed should end with " />", there is a space before / (to make the mf.matsim_output_trans_line more easy)
 
 import main as mf
+import argparse
 
 def write_sumo_events(file, sumo_events):
     f = open(file, 'w')
@@ -23,18 +24,26 @@ def write_sumo_events(file, sumo_events):
 
     f.close()
 
-name = "Leopoldstrasse"
+parser = argparse.ArgumentParser()
+parser.add_argument('--file_path', help='events_file path', type=str)
+parser.add_argument('--link_file_path', help='path to link-edge transform file', type=str)
+parser.add_argument('--name', help='Project Name', type=str)
+parser.add_argument('--scale', help='Scale factor in %, only for Munich scenario', type=int)
+parser.add_argument('--iter', help='Iteration number', type=int)
+args = parser.parse_args()
+
+files = mf.configs( args )
 events = "scalingSFExp0.75CFExp1TEST_2016.output_events.xml.gz"
 
 SUMO_LINK = []
 SUMO_EDGE = []
 LINK_EDGE_DIC = {}
 
-files = mf.configs( 'Leopoldstrasse' )
+files = mf.configs( args )
 
-link_edge_file = "./scenario/" + name + "/link_to_edge.txt"
-events_file = './scenario/' + name + '/' + events
-events_output_file ='./scenario/' + name + '/100_sumo_' + events[0:-3]
+link_edge_file = "./scenario/" + files.name + "/link_to_edge.txt"
+events_file = './scenario/' + files.name + '/' + events
+events_output_file ='./scenario/' + files.name + '/' + str(args.scale) + '_sumo_' + events[0:-3]
 matsim_map_path = files.matsim_add + '/scenarios/Munich/' + files.matsim_map
 
 [SUMO_LINK, SUMO_EDGE, LINK_EDGE_DIC] = mf.load_link_edge(link_edge_file)
