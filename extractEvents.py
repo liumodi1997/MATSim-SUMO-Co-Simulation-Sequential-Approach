@@ -4,6 +4,77 @@
 
 import main as mf
 import argparse
+import time
+import gzip
+import ClassDefine as cd
+
+def matsim_event_extract_line(file, matsim_link_sumo):
+    print('Transforming MATSim output (read by line)')
+    start = time.time()
+    #veh = { veh_id: [[],[],[],...] }
+    #veh[veh_id] = [ [link_1,timei_1(depart_time),timeo_1], [link_2,timei_2,timeo_2], ..., [link_k,timei_k,timeo_k], ['-1',-1,arr_time] ]
+    veh = {}
+    num_event = 0
+    num_veh = 0
+    num_trip = 0
+    count = 0
+    n = 0
+
+    ending = file[-3:]
+    if ending == ".gz":
+        print('Loading event gz file')
+        gfile = gzip.open(file, 'r')
+    else:
+        print('Loading event xml file')
+        gfile = open(file, 'r')
+
+    line = gfile.readline()
+    if ending == ".gz":
+        line = str(line, encoding="utf8")
+
+    # build the list, whose index is the Vehicle_ID, and whose context is routes and time
+    # record the start time and end time of all events
+    # build the list of class event, which includes the events in SUMO-area
+    sumo_events = []
+
+    while line != '':
+        segments = line.split('" ')
+        first = segments[0]
+        if first[1:7] != "<event":
+            line = gfile.readline()
+            if ending == ".gz":
+                line = str(line, encoding="utf8")
+            continue
+        child = cd.event_ele(segments)
+        line = gfile.readline()
+        if ending == ".gz":
+            line = str(line, encoding="utf8")
+        num_event += 1
+        veh_id = child.id
+        type = child.type
+        if n == 0:
+            start_time = child.time
+        if line[:9] == "</events>":
+            end_time = child.time
+        n += 1
+
+        if type == "entered link":
+            link_id = child.link
+            if link_id in SUMO_LINK:
+                one_event = cd.event(veh_id, type, child.time, link_id, child.pos)
+                sumo_events.append(one_event)
+
+        if type == "vehicle leaves traffic" or type == "left link":
+            link_id = child.link
+            if link_id in SUMO_LINK:
+                one_event = cd.event(veh_id, type, child.time, link_id, child.pos)
+                sumo_events.append( one_event )
+
+    endt = time.time()
+    print(f"MATSim output event file transfered, time='{endt-start}'")
+
+    return sumo_events
+
 
 def write_sumo_events(file, sumo_events):
     f = open(file, 'w')
@@ -48,5 +119,5 @@ matsim_map_path = files.matsim_add + '/scenarios/Munich/' + files.matsim_map
 
 [SUMO_LINK, SUMO_EDGE, LINK_EDGE_DIC] = mf.load_link_edge(link_edge_file)
 matsim_node, matsim_link, matsim_link_sumo = mf.load_link(mf.parse_xml_gz(matsim_map_path))
-veh, matsim_simu_time, sumo_events = mf.matsim_output_trans_line(events_file, matsim_link_sumo)
+sumo_events = matsim_event_extract_line(events_file, matsim_link_sumo)
 write_sumo_events(events_output_file, sumo_events)
