@@ -65,7 +65,8 @@ if __name__ == '__main__':
         link_modify = mf.matsim_network_opt(link_modify, matsim_link_sumo, link_measure, edge_measure, comp_measure, files.interval)
 
         # Step 8: Write MATSim input file
-        mf.update_event_change_file(files, event_change_tree, link_modify)
+        event_change_log = dir + "/eventChange_S" + str(args.scale) + "_I" + str(iter_num - 1) + ".xml"
+        mf.update_event_change_file(files, event_change_tree, link_modify, event_change_log)
 
         # Step 9: Write data and log
 
@@ -73,6 +74,7 @@ if __name__ == '__main__':
         link_csv_output = dir + "/link" + ending
         edge_csv_output = dir + "/edge" + ending
         comp_csv_output = dir + "/comp" + ending
+
         ms.create_csv(link_csv_output, edge_csv_output, comp_csv_output, link_measure, edge_measure, comp_measure,files.interval, 0, 86400)
 
     print('**********************************************Iteration Finish***************************************************')

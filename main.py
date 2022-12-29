@@ -85,6 +85,7 @@ class configs:
         self.matsim_map_path = self.matsim_add + '/scenarios/' + self.matsim_scenario + '/' + self.matsim_map
         self.event_file_path = self.matsim_add + '/' + 'scenarios/' + self.matsim_scenario + '/output/test.output_events.xml.gz'
         self.event_change_file_path = self.matsim_add + '/scenarios/' + self.matsim_scenario + '/networkChangeEvents.xml'
+
         # SUMO related
         self.name = name
         self.route_file_path = './scenario/' + name + '/sumo/' + self.sumo_route
@@ -619,7 +620,7 @@ def random_cars_gen(routes, gauss_sigma, factor):
         gauss_dis = np.random.normal(loc=mu, scale=gauss_sigma, size=(factor))
         n += 1
         new_routes.append(route)
-        for i in range(factor):
+        for i in range(factor-1):
             new_route = [gauss_dis[i], route[1], route[2], route[-1] + (gauss_dis[i] - mu)]
             new_routes.append(new_route)
             n += 1
@@ -867,7 +868,7 @@ def matsim_network_opt(link_modify, matsim_link_sumo, link_measure, edge_measure
             speed_rate = comp_measure_speed[i] / to_modify.freespeed[i]
             if speed_rate < -1:
                 speed_rate = -1
-            to_modify.capacity[i] = to_modify.capacity[i] * (1 - speed_rate * 0.2)
+            to_modify.capacity[i] = to_modify.capacity[i] * (1 - speed_rate * 0.8)
     return link_modify
 
 def create_event_change_file(files, link_modify):
@@ -888,7 +889,7 @@ def create_event_change_file(files, link_modify):
     tree.write(files.event_change_file_path, encoding="utf-8", xml_declaration=True)
     return tree
 
-def update_event_change_file(files, tree, link_modify):
+def update_event_change_file(files, tree, link_modify, event_change_log):
     print("Updating network event change file for MATSim")
     nodes = tree.findall("networkChangeEvent")
     for link in link_modify:
@@ -909,6 +910,7 @@ def update_event_change_file(files, tree, link_modify):
                         if sub_node.tag == 'capacity':
                             sub_node.set('value', str(link_info.capacity[i]))
     tree.write(files.event_change_file_path, encoding="utf-8", xml_declaration=True)
+    tree.write(event_change_log, encoding="utf-8", xml_declaration=True)
 
 
 

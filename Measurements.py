@@ -371,7 +371,7 @@ def load_edge_measurement(xml_file, sumo_edge, time_interval):
     return edge_measure
 
 
-def compare_measurement(link_measure, edge_measure, link_edge_dic, time_interval):
+def compare_measurement(link_measure, edge_measure, link_edge_dic, time_interval, scale):
     comp_measure = {}
     for link in link_measure:
         edge = link_edge_dic[link]
@@ -383,7 +383,7 @@ def compare_measurement(link_measure, edge_measure, link_edge_dic, time_interval
             edge_info = edge_measure[edge]
         except TypeError:
             print(f"link={link} edge={edge}")
-        comp_ele = cd.compare_ele(link_info, edge_info, time_interval)
+        comp_ele = cd.compare_ele(link_info, edge_info, time_interval, scale)
         comp_measure[link] = comp_ele
         if link == '289841':
             print('1')

@@ -62,7 +62,7 @@ if __name__ == '__main__':
     files = mf.configs( args )
     matsim_map_path = files.matsim_add + '/scenarios/Munich/' + files.matsim_map
     #matsim_map_path = file.matsim_add + '/scenarios/Munich/studyNetworkDense.xml'
-    events_file = './scenario/' + files.name + '/' + files.event_file
+    events_file = './scenario/' + files.name + '/' + str(args.scale) + '_sumo_' + files.event_file
     link_file = './scenario/' + files.name + '/' + files.link_file
     print('Events file path = ', events_file)
     print('Link-edge transform file path = ', files.link_edge_file_path)
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     link_measure, start_time_intervals = mf.matsim_measurements(files.interval, sumo_events, matsim_link_sumo)
 
     # Generate cars w.r.t normal distribution of depart time
-    #routes = mf.random_cars_gen(routes, 50, 20)
+    routes = mf.random_cars_gen(routes, 50 , int(100 / args.scale))
     print(f"After random, Number of routes = {len(routes)}")
 
     mf.sumo_files_gen(files, routes, link_measure, start_time_intervals, cali_edge, cali_route, LINK_EDGE_DIC)
@@ -108,14 +108,13 @@ if __name__ == '__main__':
 
     edge_measure = ms.load_edge_measurement(files.edgeMeasurement_file_path, sumo_edge, files.interval)
     edge_measure = ms.update_enter_leave(files.vehroute_file_path, edge_measure, files.interval)
-    comp_measure = ms.compare_measurement(link_measure, edge_measure, LINK_EDGE_DIC, files.interval)
+    comp_measure = ms.compare_measurement(link_measure, edge_measure, LINK_EDGE_DIC, files.interval, args.scale)
 
-    time_gap = mf.cal_time_gap(routes, sumo_veh, files)
+    time_gap = mf.cal_time_gap(routes, sumo_veh, files.gap_file_path)
 
     mf.cal_score(time_gap)
 
     # Optimization & Event change file
-    matsim_link_sumo = mf.matsim_network_opt(link_modify, matsim_link_sumo, link_measure, edge_measure, comp_measure,
-                                             files.interval)
-    event_change_tree = mf.create_event_change_file(files, link_modify)
-    mf.update_event_change_file(files, event_change_tree, link_modify)
+    #matsim_link_sumo = mf.matsim_network_opt(link_modify, matsim_link_sumo, link_measure, edge_measure, comp_measure,files.interval)
+    #event_change_tree = mf.create_event_change_file(files, link_modify)
+    #mf.update_event_change_file(files, event_change_tree, link_modify)

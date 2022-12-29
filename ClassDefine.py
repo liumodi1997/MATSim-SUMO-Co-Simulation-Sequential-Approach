@@ -77,7 +77,7 @@ class edgemeasure_ele:
         self.timeLoss = []
 
 class compare_ele:
-    def __init__(self, link_info, edge_info, time_interval):
+    def __init__(self, link_info, edge_info, time_interval, scale):
         self.link_id = link_info.link_id
         self.edge_id = edge_info.edge_id
         self.link_len = link_info.length
@@ -90,8 +90,8 @@ class compare_ele:
         self.comp_flow = []
 
         for i in range(len(link_info.enter_num)):
-            self.comp_enter.append(int(link_info.enter_num[i]) - int(edge_info.enter_num[i]))
-            self.comp_leave.append(int(link_info.leave_num[i]) - int(edge_info.leave_num[i]))
+            self.comp_enter.append(int(link_info.enter_num[i]) * 100 / scale - int(edge_info.enter_num[i]))
+            self.comp_leave.append(int(link_info.leave_num[i]) * 100 / scale - int(edge_info.leave_num[i]))
 
             if float(link_info.avg_speed[i]) != 0 and float(edge_info.avg_speed[i]) != 0:
                 self.comp_travelTime.append(float(link_info.length) / float(link_info.avg_speed[i]) * int(link_info.leave_num[i]) - float(edge_info.length) / float(edge_info.avg_speed[i]))
@@ -104,7 +104,7 @@ class compare_ele:
                 self.comp_travelTime_per_meter.append(int(link_info.leave_num[i]) / float(link_info.avg_speed[i]) - 1 / float(edge_info.avg_speed[i]))
             else:
                 self.comp_travelTime_per_meter.append(0)
-            self.comp_flow.append((int(link_info.leave_num[i]) - int(edge_info.leave_num[i])) / time_interval * 3600)
+            self.comp_flow.append((int(link_info.leave_num[i]) * 100 / scale - int(edge_info.leave_num[i])) / time_interval * 3600)
 
 class link_variant:
     def __init__(self, link_id, time_interval, link_info):
