@@ -184,7 +184,7 @@ def run_matsim_jpype(jar_path, config_path):
 #direct run jar package with subprocess without starting JVM
 def run_matsim_subprocess(jar_path, config_path):
     print('Running MATSim')
-    instr_run_subprocess = ['java','-Xmx5120m','-cp',jar_path,'org.matsim.core.controler.Controler',config_path]
+    instr_run_subprocess = ['java','-Xmx9216m','-cp',jar_path,'org.matsim.core.controler.Controler',config_path]
     try:
         sp_run_matsim = sp.Popen(instr_run_subprocess,stderr=sp.PIPE)
         return_code = sp_run_matsim.wait()
