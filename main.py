@@ -187,11 +187,12 @@ def run_matsim_subprocess(jar_path, config_path):
     instr_run_subprocess = ['java','-Xmx5120m','-cp',jar_path,'org.matsim.core.controler.Controler',config_path]
     try:
         sp_run_matsim = sp.Popen(instr_run_subprocess,stderr=sp.PIPE)
+        return_code = sp_run_matsim.wait()
     except sp.CalledProcessError as err:
         print('ERROR: ',err)
     else:
-        print('Returncode: ', sp_run_matsim.returncode)
-        print("0")
+        print('Returncode: ', return_code)
+        return 0
 
 def run_matsim_cmd(jar_path, config_path):
     print('Running MATSim')
@@ -761,6 +762,7 @@ def run_sumo(files):
     traci.close()
 
 def sumo_output_trans(xml_file,num_veh_cross):
+    print("Tranfering SUMO vehRoute File")
     root = parse_xml(xml_file)
     #sumo_veh = { 'id' : [ id, depart, arrival, route, leave_time] }
     sumo_veh = {}
@@ -781,6 +783,7 @@ def sumo_output_trans(xml_file,num_veh_cross):
 
 
 def cal_time_gap(routes,sumo_veh, file):
+    print("Calculating time gap, writing TripGap.csv")
     #time_gap = { id : [ depart_time_gap , arrival_time_gap , used_time_gap ] }
     #time gap = Matsim_time - SUMO_time
     #gap > 0  ==>  MATSim run slow, arrive late
@@ -871,22 +874,29 @@ def matsim_network_opt(link_modify, matsim_link_sumo, link_measure, edge_measure
             to_modify.capacity[i] = to_modify.capacity[i] * (1 - speed_rate * 0.8)
     return link_modify
 
-def create_event_change_file(files, link_modify):
+def create_event_change_file(files, link_modify, matsim_link_sumo):
     root = ET.Element("networkChangeEvents")
     root.attrib = {"xmlns":             "http://www.matsim.org/files/dtd",
                    "xmlns:xsi":         "http://www.w3.org/2001/XMLSchema-instance",
                    "xsi:schemaLocation":"http://www.matsim.org/files/dtd http://www.matsim.org/files/dtd/networkChangeEvents.xsd"}
-    for link in link_modify:
-        link_info = link_modify[link]
-        for i in range(link_info.n_interval):
+    tree = ET.ElementTree(root)
+    # print empty file
+    tree.write(files.event_change_file_path, encoding="utf-8", xml_declaration=True)
+    n_interval = int(86400 / files.interval)
+
+    # Initialise tree with original param(capacity & freeSpeed)
+    for link in matsim_link_sumo:
+        link_info = matsim_link_sumo[link]
+        for i in range(n_interval):
             node = ET.SubElement(root, "networkChangeEvent")
-            node.attrib = {"startTime": str(files.interval * (link_info.n_interval - 1))}
+            start_time = time.strftime("%H:%M:%S", time.gmtime(files.interval * i))
+            node.attrib = {"startTime": start_time}
             sub_node = ET.SubElement(node, "link")
             sub_node.attrib = {"refId": link}
-            sub_node_2 = ET.SubElement(node, "capacity")
-            sub_node_2.attrib = {"type": "absolute", "value": str(link_info.capacity[i])}
+            sub_node_2 = ET.SubElement(node, "flowCapacity")
+            sub_node_2.attrib = {"type": "absolute", "value": str(link_info.capacity)}
+
     tree = ET.ElementTree(root)
-    tree.write(files.event_change_file_path, encoding="utf-8", xml_declaration=True)
     return tree
 
 def update_event_change_file(files, tree, link_modify, event_change_log):
@@ -905,9 +915,12 @@ def update_event_change_file(files, tree, link_modify, event_change_log):
         for i in range(link_info.n_interval):
             time = files.interval * (i)
             for node in node_link:
-                if node.attrib['startTime'] == time:
+                start_time = node.attrib['startTime']
+                h, m, s = start_time.strip().split(":")
+                start_time = int(h) * 3600 + int(m) * 60 + int(s)
+                if start_time == time:
                     for sub_node in node:
-                        if sub_node.tag == 'capacity':
+                        if sub_node.tag == 'flowCapacity':
                             sub_node.set('value', str(link_info.capacity[i]))
     tree.write(files.event_change_file_path, encoding="utf-8", xml_declaration=True)
     tree.write(event_change_log, encoding="utf-8", xml_declaration=True)

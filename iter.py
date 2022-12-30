@@ -22,6 +22,9 @@ if __name__ == '__main__':
     link_modify = {}
     average_gap = []
 
+    # Initiate tree with Null link_modify, and create empty eventChange file
+    event_change_tree = mf.create_event_change_file(files, link_modify, matsim_link_sumo)
+
     # Iteration start
     while iter_num < files.max_iter:
         print("<*******************************************************************************************************>")
@@ -29,16 +32,14 @@ if __name__ == '__main__':
         print("<*******************************************************************************************************>")
         iter_num += 1
 
-        # Initialise event change file, and folder
-        if iter_num == 1:
-            event_change_tree = mf.create_event_change_file(files, {})
+        # Initialise folder
         dir = './scenario/' + files.name + '/Analysis/Scale_' + str(args.scale) + '_Iteration_' + str(iter_num - 1)
         if not os.path.exists(dir):
             os.makedirs(dir)
 
 
         # Step 2: MATSim Simulation and measurement
-        print(mf.run_matsim_cmd(files.jar_path, files.matsim_config_path))
+        print(mf.run_matsim_subprocess(files.jar_path, files.matsim_config_path))
         veh, matsim_simu_time, sumo_events = mf.matsim_output_trans_line(files.event_file_path, matsim_link_sumo)
         link_measure, start_time_intervals = mf.matsim_measurements(files.interval, sumo_events, matsim_link_sumo)
 
@@ -56,7 +57,7 @@ if __name__ == '__main__':
         sumo_veh = mf.sumo_output_trans(files.vehroute_file_path, len(routes))
         edge_measure = ms.load_edge_measurement(files.edgeMeasurement_file_path, sumo_edge, files.interval)
         edge_measure = ms.update_enter_leave(files.vehroute_file_path, edge_measure, files.interval)
-        comp_measure = ms.compare_measurement(link_measure, edge_measure, LINK_EDGE_DIC, files.interval)
+        comp_measure = ms.compare_measurement(link_measure, edge_measure, LINK_EDGE_DIC, files.interval, args.scale)
         gap_file = dir + '/TripGap_S' + str(args.scale) + '_I' + str(iter_num - 1) +  ".csv"
         time_gap = mf.cal_time_gap(routes, sumo_veh, gap_file)
         average_gap.append(mf.cal_score(time_gap))
