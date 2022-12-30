@@ -849,7 +849,7 @@ def cal_score(time_gap):
     return average
 
 def matsim_network_opt(link_modify, matsim_link_sumo, link_measure, edge_measure, comp_measure, time_interval):
-    print('Optimizing MATSim network link flow capacity')
+    print('Optimizing MATSim network link free speed')
     # link_modify records the modifications of link param
     # link_modify = { link_ID: cls link_varient }
 
@@ -871,7 +871,8 @@ def matsim_network_opt(link_modify, matsim_link_sumo, link_measure, edge_measure
             speed_rate = comp_measure_speed[i] / to_modify.freespeed[i]
             if speed_rate < -1:
                 speed_rate = -1
-            to_modify.capacity[i] = to_modify.capacity[i] * (1 - speed_rate * 0.8)
+            #to_modify.capacity[i] = to_modify.capacity[i] * (1 - speed_rate * 0.8)
+            to_modify.freespeed[i] = to_modify.freespeed[i] * (1 - speed_rate * 0.5)
     return link_modify
 
 def create_event_change_file(files, link_modify, matsim_link_sumo):
@@ -893,8 +894,8 @@ def create_event_change_file(files, link_modify, matsim_link_sumo):
             node.attrib = {"startTime": start_time}
             sub_node = ET.SubElement(node, "link")
             sub_node.attrib = {"refId": link}
-            sub_node_2 = ET.SubElement(node, "flowCapacity")
-            sub_node_2.attrib = {"type": "absolute", "value": str(link_info.capacity)}
+            sub_node_2 = ET.SubElement(node, "freespeed")
+            sub_node_2.attrib = {"type": "absolute", "value": str(link_info.freespeed)}
 
     tree = ET.ElementTree(root)
     return tree
@@ -920,8 +921,8 @@ def update_event_change_file(files, tree, link_modify, event_change_log):
                 start_time = int(h) * 3600 + int(m) * 60 + int(s)
                 if start_time == time:
                     for sub_node in node:
-                        if sub_node.tag == 'flowCapacity':
-                            sub_node.set('value', str(link_info.capacity[i]))
+                        if sub_node.tag == 'freespeed':
+                            sub_node.set('value', str(link_info.freespeed[i]))
     tree.write(files.event_change_file_path, encoding="utf-8", xml_declaration=True)
     tree.write(event_change_log, encoding="utf-8", xml_declaration=True)
 
